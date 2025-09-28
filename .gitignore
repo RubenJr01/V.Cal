@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment
+.env
+*.env
+.venv/
+venv/
+ENV/
+env/
+.env.local
+.env.*.local
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*~
+.project
+.pydevproject
+
+# Migrations (optional: keep if you want them versioned)
+# Uncomment the next line if you want to ignore all migrations
+# */migrations/
+
+# Node / Frontend (if you later add React/Bootstrap build here)
+node_modules/
+build/
+dist/
+*.lock
+
+# OS-specific
+.DS_Store
+Thumbs.db
