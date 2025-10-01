@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+  <div class="text-center">
+    <h1 class="mt-4">Welcome to VCAL!</h1>
+    <p class="lead">Start scheduling!.</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('login') }}">Log In</a>
+  </div>
+{% endblock %}
