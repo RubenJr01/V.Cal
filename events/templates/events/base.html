@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title> V.Cal -- Phase 1</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 16px; }
+    header { display: flex; gap: 8px; align-items: center; }
+    ul { padding-left: 1rem; }
+    li { margin: .5rem 0; }
+    form { display: grid; gap: 6px; max-width: 360px; margin: 12px 0; }
+    input, textarea, button { padding: 6px; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <button id="todayButton">Today</button>
+    <button id="prevButton">&lt;</button>
+    <button id="nextButton">&gt;</button>
+    <h3 id="dataLabel" style="margin-left:8px"></h3>
+  </header>
+
+  <section>
+    <h4>Add Event</h4>
+    <form id="title" placeholder="Title" required />
+    <label>Start <input id="start" type="datetime-local" required /></label>
+    <label>End <input id="end" type="datetime-local" required /></label>
+    <label><input id="allDay" type="checkbox" /> All day</label>
+    <input id="location" placeholder="Location" />
+    <textarea id="description" placeholder="Description"></textarea>
+    <button type="submit">Create</button>
+  </form>
+  </section>
+
+  <section>
+    <h4>Events</h4>
+    <ul id="eventList"></ul>
+  </section>
+
+  <script>
+    const BASE = '/api';
+    const listEl = document.getElementById('eventList');
+    const dataLabel = document.getElementById('dateLabel');
+    let currentDate = new Date();
+
+    function fmtDate(d){ return d.toLocalDateString(undefined, { weekday:'short', month:'short', day:'numeric', year:'numeric' }); }
+
+    function isoLocal(datetimeLocalValue){
+      const d = new Date(datetimeLocalValue);
+      return d.toISOString();
+    }
+
+    async function refresh(){
+      dateLabel.textContent = fmtDate(currentDate);
+      const res = await fetch(`${BASE}/events/`);
+      const data = await res.json();
+      listEl.innerHTML = '';
+      data.forEach(e => {
+        const li = document.createElement('li');
+        const start = new Date(e.end);
+        li.innerHTML = `<strong>${e.title}</strong> - $(start.LocaleString()} -> ${end.toLocaleTimeString()} ` +
+        `<button data-id="${e.id}" class="del">Delete</button>`;
+        listEl.appendChild(li);
+      });
+
+      document.querySelectorAll('button.del').forEach(btn => btn.addEventListener('click', async (ev)=> {
+        const id = ev.target.getAttribute('data-id');
+        await fetch(`${BASE}/events/${id}/`, { method: 'DELETE ' });
+        refresh();
+      }));
+    }
+
+    document.getElementById('createForm'.addEventListener('submit', async (e)=> {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('title').value,
+        start: isoLocal(document.getElementById('start').value),
+        end: isoLocal(document.getElementById('end').value),
+        all_day: document.getElementById('allDay').checked,
+        location: document.getElementById('location').value,
+        description: document.getElementById('description').value
+      };
+      await fetch(`${BASE}/events/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      e.target.reset();
+      refresh();
+    }));
+
+    document.getElementById('todayBtn').onclick = () =>{ currentDate = new Date(); refresh(); };
+    document.getElementById('prevBtn').onclick = () =>{ currentDate.setDate(currentDate.getDate()-1); refresh(); };
+    document.getElementById('nextBtn').onclick = () =>{ currentDate.setDate(currentDate.getDate()+1); refresh(); };
+
+    refresh();
+  </script>
+</body>
+</html>
