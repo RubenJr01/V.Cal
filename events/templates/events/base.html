@@ -40,6 +40,15 @@
         color: #666;
         font-size: 0.9rem;
       }
+      .msg {
+        min-height: 1.2em;
+      }
+      .msg.error {
+        color: #b00020;
+      }
+      .msg.success {
+        color: #0b7;
+      }
     </style>
   </head>
   <body>
@@ -73,12 +82,11 @@
 
         <label><input id="allDay" type="checkbox" /> All day</label>
 
-        <!-- Removed the Location field per your request -->
+        <!-- Location removed -->
         <textarea id="description" placeholder="Description"></textarea>
-        <button type="submit">Create</button>
-        <div class="muted">
-          Times are saved in UTC; shown in your local time.
-        </div>
+
+        <button id="createBtn" type="submit">Create</button>
+        <div id="formMsg" class="msg muted"></div>
       </form>
     </section>
 
@@ -101,6 +109,8 @@
       const BASE = "/api";
       const listEl = document.getElementById("eventList");
       const dateLabel = document.getElementById("dateLabel");
+      const msgEl = document.getElementById("formMsg");
+      const btnEl = document.getElementById("createBtn");
       let currentDate = new Date();
 
       // Utilities
@@ -113,13 +123,16 @@
         });
       }
       function toISOFromLocal(dateStr, timeStr) {
-        // expects 'YYYY-MM-DD' and 'HH:mm'
-        // new Date('YYYY-MM-DDTHH:mm') is interpreted as local time in browsers
-        const local = new Date(`${dateStr}T${timeStr}`);
+        const local = new Date(`${dateStr}T${timeStr}`); // local time
         return local.toISOString();
       }
+      function makeLocalDate(dateId, timeId) {
+        const d = document.getElementById(dateId).value; // YYYY-MM-DD
+        const t = document.getElementById(timeId).value; // HH:mm
+        return new Date(`${d}T${t}`); // local
+      }
 
-      // Prefill date & time to now (nice quality-of-life)
+      // Prefill date & time to now
       function prefillNow() {
         const now = new Date();
         const pad = (n) => String(n).padStart(2, "0");
@@ -153,13 +166,17 @@
         document.querySelectorAll("button.del").forEach((btn) =>
           btn.addEventListener("click", async (ev) => {
             const id = ev.target.getAttribute("data-id");
-            await fetch(`${BASE}/events/${id}/`, {
+            const delRes = await fetch(`${BASE}/events/${id}/`, {
               method: "DELETE",
               headers: {
                 "X-CSRFToken": csrftoken,
                 "X-Requested-With": "XMLHttpRequest",
               },
             });
+            if (!delRes.ok) {
+              alert("Failed to delete. Please try again.");
+              return;
+            }
             refresh();
           })
         );
@@ -169,38 +186,80 @@
         .getElementById("createForm")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
+          msgEl.className = "msg muted";
+          msgEl.textContent = "";
+          btnEl.disabled = true;
 
-          const startISO = toISOFromLocal(
-            document.getElementById("startDate").value,
-            document.getElementById("startTime").value
-          );
-          const endISO = toISOFromLocal(
-            document.getElementById("endDate").value,
-            document.getElementById("endTime").value
-          );
+          // Client-side validation: end must be after start
+          const startLocal = makeLocalDate("startDate", "startTime");
+          const endLocal = makeLocalDate("endDate", "endTime");
+          if (!(startLocal < endLocal)) {
+            msgEl.className = "msg error";
+            msgEl.textContent = "End time must be after start time.";
+            btnEl.disabled = false;
+            return;
+          }
 
           const payload = {
             title: document.getElementById("title").value,
-            start: startISO,
-            end: endISO,
+            start: toISOFromLocal(
+              document.getElementById("startDate").value,
+              document.getElementById("startTime").value
+            ),
+            end: toISOFromLocal(
+              document.getElementById("endDate").value,
+              document.getElementById("endTime").value
+            ),
             all_day: document.getElementById("allDay").checked,
             description: document.getElementById("description").value,
-            // location removed
           };
 
-          await fetch(`${BASE}/events/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": csrftoken,
-              "X-Requested-With": "XMLHttpRequest",
-            },
-            body: JSON.stringify(payload),
-          });
+          try {
+            const res = await fetch(`${BASE}/events/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken,
+                "X-Requested-With": "XMLHttpRequest",
+              },
+              body: JSON.stringify(payload),
+            });
 
-          e.target.reset();
-          prefillNow(); // keep nice defaults after submit
-          refresh();
+            if (!res.ok) {
+              // Parse DRF error: {'field':['msg']} | {'non_field_errors':['msg']}
+              let errText = "Error creating event.";
+              try {
+                const data = await res.json();
+                errText = Object.entries(data)
+                  .map(
+                    ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`
+                  )
+                  .join(" | ");
+              } catch {
+                errText = (await res.text()) || errText;
+              }
+              msgEl.className = "msg error";
+              msgEl.textContent = errText;
+              btnEl.disabled = false;
+              return;
+            }
+
+            // Success state
+            e.target.reset();
+            prefillNow();
+            await refresh();
+            msgEl.className = "msg success";
+            msgEl.textContent = "Event created.";
+            setTimeout(() => {
+              msgEl.textContent = "";
+              msgEl.className = "msg muted";
+            }, 2000);
+          } catch (err) {
+            msgEl.className = "msg error";
+            msgEl.textContent = "Network error. Please try again.";
+          } finally {
+            btnEl.disabled = false;
+          }
         });
 
       document.getElementById("todayBtn").onclick = () => {
