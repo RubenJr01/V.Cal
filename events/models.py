@@ -5,7 +5,6 @@ class Event(models.Model):
   id = models.CharField(primary_key=True, max_length=36, editable=False)
   title = models.CharField(max_length=200)
   description = models.TextField(blank=True, null=True)
-  location = models.CharField(max_length=255, blank=True, null=True)
   all_day = models.BooleanField(default=False)
   start = models.DateTimeField()
   end = models.DateTimeField()
