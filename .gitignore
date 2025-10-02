@@ -41,7 +41,7 @@ env/
 # Uncomment the next line if you want to ignore all migrations
 # */migrations/
 
-# Node / Frontend (if you later add React/Bootstrap build here)
+# Node / Frontend
 node_modules/
 build/
 dist/
