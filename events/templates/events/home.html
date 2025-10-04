@@ -1,0 +1,11 @@
+{% extends "events/layout.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+  <div class="text-center">
+    <h1 class="mt-4">Home works ✅</h1>
+    <p class="lead">Welcome to VCAL.</p>
+    {% if not request.user.is_authenticated %}
+      <a class="btn btn-primary btn-lg" href="{% url 'login' %}">Log In</a>
+    {% endif %}
+  </div>
+{% endblock %}

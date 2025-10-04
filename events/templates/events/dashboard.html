@@ -1,0 +1,8 @@
+{% extends "events/layout.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+  <h2 class="mt-4">Dashboard</h2>
+  <p>Welcome, <strong>{{ request.user.username }}</strong>! 🎉</p>
+  <p>Head to your calendar to view events.</p>
+  <a href="{% url 'calendar' %}" class="btn btn-info">Go to Calendar</a>
+{% endblock %}
