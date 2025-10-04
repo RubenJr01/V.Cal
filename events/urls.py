@@ -4,6 +4,7 @@ from .import views
 
 urlpatterns = [
   path("", webviews.home, name="home"),
+  path("signup/", webviews.signup_view, name="signup"),
   path("dashboard/", webviews.dashboard, name="dashboard"),
   path("calendar", webviews.calendar, name="calendar"),
   path("about/", webviews.about, name="about"),
