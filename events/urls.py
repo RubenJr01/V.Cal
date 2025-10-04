@@ -1,5 +1,6 @@
 from django.urls import path
 from . import webviews
+from .import views
 
 urlpatterns = [
   path("", webviews.home, name="home"),
