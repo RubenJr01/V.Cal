@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from .models import Event
 
+REMEMBER_ME_AGE = 60 * 60 * 24 * 30 # 30 days in seconds
+
 # --- Default landing page ---
 def home(request):
     if request.user.is_authenticated:
@@ -22,6 +24,13 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            
+            # Remember me handling
+            if request.POST.get("remember_me") == "1":
+                request.session.set_expiry(REMEMBER_ME_AGE) # 30 days
+            else:
+                request.session.set_expiry(0) # browser session only
+                
             return redirect("dashboard")
         
     return render(request, "events/signup.html", {"form": form})
@@ -50,6 +59,13 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            
+            # Remember me handling on login
+            if request.POST.get("remember_me") == "1":
+                request.session.set_expiry(REMEMBER_ME_AGE) # 30 days
+            else:
+                request.session.set_expiry(0) # browser session only
+                
             return redirect("dashboard")
         return render(request, "events/login.html", {"error": "Invalid username or password"})
     return render(request, "events/login.html")

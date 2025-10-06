@@ -72,6 +72,7 @@ USE_TZ = True
 
 # --- Static files ---
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "events" / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -85,3 +86,6 @@ REST_FRAMEWORK = {
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/"
+
+# --- Fresh sessions "30-day timer refresh"
+SESSION_SAVE_EVERY_REQUEST = True
